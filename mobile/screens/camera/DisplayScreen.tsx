@@ -23,7 +23,6 @@ const styles = StyleSheet.create({
 const DisplayScreen = props => {
   const picture = props.navigation.getParam('picture',null);
   const { uri } = picture;
-  console.log(picture);
   return(
     <ImageBackground source={{uri}} style={ styles.image }>
       <TouchableOpacity 
@@ -36,7 +35,7 @@ const DisplayScreen = props => {
       <TouchableOpacity 
         style={ styles.resume }
         onPress={ () => {
-          props.navigation.navigate('Result');
+          props.navigation.navigate('Result',{uri});
         }}>
         <AntDesign name='rightcircle' size={50} color='#fff'/>
       </TouchableOpacity>
