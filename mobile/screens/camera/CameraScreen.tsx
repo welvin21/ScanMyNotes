@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createRef, RefObject } from 'react';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import * as Permissions from 'expo-permissions';
 import * as Gallery from 'expo-image-picker';
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
 const CameraScreen = () => {
     const [ hasCameraPermission, changeCameraPermission ] = useState(null);
     const [ cameraType, changeCameraType ] = useState(Camera.Constants.Type.back);
-    const cameraRef = React.createRef();
+    const cameraRef = createRef<Camera>();
 
     useEffect(() => {
         const askForPermission = async () => {
@@ -50,9 +50,10 @@ const CameraScreen = () => {
                   </TouchableOpacity>
                   <TouchableOpacity
                       onPress={async() => {
-                        let photo = await cameraRef.current.takePictureAsync();
+                        const photo = await cameraRef.current.takePictureAsync();
                         console.log(photo.uri);
-                      }}>
+                      }}
+                  >
                       <Ionicons name='ios-radio-button-on' size={80} color='#fff'/>
                   </TouchableOpacity>
                   <TouchableOpacity
