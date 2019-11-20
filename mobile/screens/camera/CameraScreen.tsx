@@ -37,7 +37,7 @@ const CameraScreen = props => {
     } else{
         return(
             <View style={{ flex: 1 }}>
-            <Camera style={{ flex: 1 }} type={ cameraType } ref={ cameraRef }>
+            <Camera style={{ flex: 1 }} type={ cameraType } ref={ cameraRef } autoFocus={ Camera.Constants.AutoFocus.on }>
                 <View style={ styles.container }>
                   <TouchableOpacity
                       style={ styles.sider }
@@ -50,9 +50,8 @@ const CameraScreen = props => {
                   </TouchableOpacity>
                   <TouchableOpacity
                       onPress={async() => {
-                        const photo = await cameraRef.current.takePictureAsync();
-                        console.log(photo.uri);
-                        props.navigation.navigate('Display');
+                        const picture = await cameraRef.current.takePictureAsync();
+                        props.navigation.navigate('Display',{picture});
                       }}
                   >
                       <Ionicons name='ios-radio-button-on' size={80} color='#fff'/>
