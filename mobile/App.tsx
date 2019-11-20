@@ -1,9 +1,9 @@
 import React from 'react';
-import CameraScreen from './screens/camera/CameraScreen';
+import Main from './screens/Main';
 
 export default function App() {
   return (
-    <CameraScreen/>
+    <Main/>
   );
 }
 

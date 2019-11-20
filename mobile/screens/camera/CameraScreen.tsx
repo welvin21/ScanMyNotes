@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createRef, RefObject } from 'react';
+import React, { useState, useEffect, createRef } from 'react';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import * as Permissions from 'expo-permissions';
 import * as Gallery from 'expo-image-picker';
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   }
 })
 
-const CameraScreen = () => {
+const CameraScreen = props => {
     const [ hasCameraPermission, changeCameraPermission ] = useState(null);
     const [ cameraType, changeCameraType ] = useState(Camera.Constants.Type.back);
     const cameraRef = createRef<Camera>();
@@ -37,7 +37,7 @@ const CameraScreen = () => {
     } else{
         return(
             <View style={{ flex: 1 }}>
-            <Camera style={{ flex: 1 }} type={ cameraType } ref={ cameraRef }>
+            <Camera style={{ flex: 1 }} type={ cameraType } ref={ cameraRef } autoFocus={ Camera.Constants.AutoFocus.on }>
                 <View style={ styles.container }>
                   <TouchableOpacity
                       style={ styles.sider }
@@ -50,8 +50,8 @@ const CameraScreen = () => {
                   </TouchableOpacity>
                   <TouchableOpacity
                       onPress={async() => {
-                        const photo = await cameraRef.current.takePictureAsync();
-                        console.log(photo.uri);
+                        const picture = await cameraRef.current.takePictureAsync();
+                        props.navigation.navigate('Display',{picture});
                       }}
                   >
                       <Ionicons name='ios-radio-button-on' size={80} color='#fff'/>
