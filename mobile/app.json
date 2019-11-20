@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ScanMyNotes",
-    "slug": "mobile",
+    "slug": "ScanMyNotes",
     "privacy": "public",
     "sdkVersion": "35.0.0",
     "platforms": [
