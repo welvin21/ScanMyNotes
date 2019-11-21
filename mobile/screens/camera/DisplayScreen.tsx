@@ -35,7 +35,7 @@ const DisplayScreen = props => {
       <TouchableOpacity 
         style={ styles.resume }
         onPress={ () => {
-          props.navigation.navigate('Result',{uri});
+          props.navigation.navigate('Result',{picture});
         }}>
         <AntDesign name='rightcircle' size={50} color='#fff'/>
       </TouchableOpacity>

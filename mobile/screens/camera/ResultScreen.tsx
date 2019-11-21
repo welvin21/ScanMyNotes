@@ -2,23 +2,46 @@ import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import Loader from '../../components/Loader';
+import env from '../../env';
 
 const axios = require('axios');
+const firebase = require('firebase/app');
+require('firebase/storage');
+
+const fbConfig = env.fbConfig;
+firebase.initializeApp(fbConfig);
+const storageRef = firebase.storage().ref();
+const imageRef = storageRef.child('image.jpeg');
 
 const Result = props => {
-  const url = props.navigation.getParam('uri',null);
+  const picture = props.navigation.getParam('picture',null);
   const [ result, changeResult ] = useState(null);
+  const { uri } = picture;
 
   useEffect(() => {
     const getResult = async() => {
-      const base64 = await FileSystem.readAsStringAsync(url, { encoding: 'base64' });
-      await axios.post('http://192.168.1.7:3000/convert',{base64})
-          .then( res => changeResult(res.data) )
-          .catch( err => console.error(err) );
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      (async() => {
+        imageRef.put(blob)
+        .then( snapshot => {
+          return snapshot.ref.getDownloadURL();
+        })
+        .then( async url => {
+            await axios.post(`http://${env.myIPv4}:3000/convert`,{url})
+            .then(res => changeResult(res.data))
+            .catch(err => {
+              console.error(err);
+              changeResult('Failed getting result');
+            });
+        })
+        .catch( err => console.error(err) );
+      })();
     }
 
     setTimeout( () => {
-      changeResult('Fix OCR file transfer problem!');
+      getResult();
     }, 3500);
 
   },[]);
