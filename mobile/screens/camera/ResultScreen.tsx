@@ -21,7 +21,7 @@ const Result = props => {
         }
       }).then( res => {
         const { ParsedResults } = res.data;
-        changeResult(ParsedResults[0].ParsedText);
+        changeResult('output');
       } )
       .catch( err => console.error(err) );
     };
