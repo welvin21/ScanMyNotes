@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
-import env from '../../env';
+import * as FileSystem from 'expo-file-system';
 import Loader from '../../components/Loader';
 
 const axios = require('axios');
@@ -11,23 +11,14 @@ const Result = props => {
 
   useEffect(() => {
     const getResult = async() => {
-      let formData = new FormData();
-      formData.append('apikey',env.apikey);
-      formData.append('url',url);
-      
-      axios.post('https://api.ocr.space/parse/image',formData,{
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }).then( res => {
-        const { ParsedResults } = res.data;
-        changeResult('output');
-      } )
-      .catch( err => console.error(err) );
-    };
+      const base64 = await FileSystem.readAsStringAsync(url, { encoding: 'base64' });
+      await axios.post('http://192.168.1.7:3000/convert',{base64})
+          .then( res => changeResult(res.data) )
+          .catch( err => console.error(err) );
+    }
 
-    setInterval( () => {
-      getResult();
+    setTimeout( () => {
+      changeResult('Fix OCR file transfer problem!');
     }, 3500);
 
   },[]);
