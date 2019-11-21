@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import env from '../../env';
+import Loader from '../../components/Loader';
 
 const axios = require('axios');
 
@@ -25,13 +26,16 @@ const Result = props => {
       .catch( err => console.error(err) );
     };
 
-    getResult();
+    setInterval( () => {
+      getResult();
+    }, 3500);
+
   },[]);
 
   if(!result){
     return(
       <View style={{flex : 1}} >
-        <Text style={{top : '40%', position: 'absolute'}}>Loading Component</Text>
+        <Loader/>
       </View>
     );
   }else{
