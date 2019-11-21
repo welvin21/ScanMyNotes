@@ -12,7 +12,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
-    "tesseract.js": "^1.0.19"
+    "tesseract.js": "^2.0.0-beta.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.0"

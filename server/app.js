@@ -1,19 +1,21 @@
 const Tesseract = require('tesseract.js');
 const express = require('express');
 const bodyParser = require('body-parser');
+
 const app = express();
 
-app.use(bodyParser.json({limit: '50mb'}));
-app.use(bodyParser.urlencoded({limit: '50mb', parameterLimit: 50000, extended: true}));
+app.use(bodyParser.json({limit: '10mb'}));
+app.use(bodyParser.urlencoded({limit: '10mb', parameterLimit: 10000, extended: true}));
 
 app.post('/convert',(req,res) => {
-  let { base64 } = req.body;
-  
+  const { url } = req.body;
   Tesseract.recognize(
-    base64,
+    url,
     'eng',
+    { logger: log => console.log(log) }
   ).then( ocrResult => {
-    res.send(ocrResult.paragraphs[0].text);
+    const { data: {text} } = ocrResult;
+    res.send(text);
   }).catch( err => {
     console.error(err);
     res.send('Failed to recognize text');
