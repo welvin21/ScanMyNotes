@@ -14,7 +14,7 @@ const Loader = () => {
   const [ visibility, changeVisibility ] = useState(false);
 
   useEffect( () => {
-    setInterval( () => {
+    setTimeout( () => {
       changeVisibility(!visibility);
     }, 500);
   },[]);
