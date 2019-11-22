@@ -1,1 +1,6 @@
+# Distribution / packaging
 node_modules/
+env/
+
+# DS_store
+.DS_store
