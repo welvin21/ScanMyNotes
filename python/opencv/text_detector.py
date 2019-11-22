@@ -13,9 +13,9 @@ argParser.add_argument('-east', '--east', type=str,
                        help='path tp east detector (.pb file)')
 argParser.add_argument('-c', '--min-confidence', type=float,
                        default=0.5, help='min probability to inspect a region')
-argParser.add_argument('-w', '--width', type=int, default=320,
+argParser.add_argument('-w', '--width', type=int, default=1600,
                        help='resized image width (multiple of 32)')
-argParser.add_argument('-e', '--height', type=int, default=640,
+argParser.add_argument('-e', '--height', type=int, default=3200,
                        help='resized image height (multiple of 32)')
 
 args = vars(argParser.parse_args())
@@ -113,8 +113,13 @@ for box in rects:
     # draw the bounding box on the image
     # cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 
-    # get text from OCR 
+    # get portion of image containing text
     crop = orig[startY:endY, startX:endX]
+    
+    # image pre-processing
+    crop = OCR.preProcess(crop)
+
+    # get text from ocr
     txt = (OCR.getText(crop,'eng'))
     print(txt)
 
@@ -122,8 +127,7 @@ for box in rects:
     draw.text((startX,startY), txt, (0, 0, 0), font=font)
 
 # output image
-# cv2.imshow('image',orig)
-# cv2.waitKey(0)
-output.show()
+cv2.imshow('image',orig)
+
 
 
