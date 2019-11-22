@@ -2,7 +2,9 @@ import numpy as np
 import argparse
 import cv2
 import time
+from PIL import Image, ImageDraw, ImageFont
 from imutils.object_detection import non_max_suppression
+from ocr import OCR
 
 # construct argument for this script accessible from the command line
 argParser = argparse.ArgumentParser()
@@ -13,7 +15,7 @@ argParser.add_argument('-c', '--min-confidence', type=float,
                        default=0.5, help='min probability to inspect a region')
 argParser.add_argument('-w', '--width', type=int, default=320,
                        help='resized image width (multiple of 32)')
-argParser.add_argument('-e', '--height', type=int, default=320,
+argParser.add_argument('-e', '--height', type=int, default=640,
                        help='resized image height (multiple of 32)')
 
 args = vars(argParser.parse_args())
@@ -25,9 +27,13 @@ h, w = image.shape[:2]
 rH = h/float(args['height'])
 rW = w/float(args['width'])
 
+# initialize blank PIL Image for output
+output = Image.new('RGB', (w,h), (255,255,255))
+draw = ImageDraw.Draw(output)
+
 # change image's dimensions
 h, w = args['height'], args['width']
-image = cv2.resize(image, (h, w))
+image = cv2.resize(image, (w,h))
 
 # define layers' name for later purpose
 layers = [
@@ -94,9 +100,30 @@ for box in rects:
     endX = int(box[2] * rW)
     endY = int(box[3] * rH)
 
+    boxHeight = abs(endY - startY)
+    boxWidth = abs(endX - startX)
+    toleranceX = int(10/100 * boxWidth)
+    toleranceY = int(10/100 * boxHeight)
+
+    startX-=toleranceX
+    startY-=toleranceY
+    endX+=toleranceX
+    endY+=toleranceY
+
     # draw the bounding box on the image
-    cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+    # cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+
+    # get text from OCR 
+    crop = orig[startY:endY, startX:endX]
+    txt = (OCR.getText(crop,'eng'))
+    print(txt)
+
+    font = ImageFont.truetype('./fonts/arial.ttf', max(int(boxHeight * 0.6), 14))
+    draw.text((startX,startY), txt, (0, 0, 0), font=font)
 
 # output image
-cv2.imshow('Text detection', orig)
-cv2.waitKey(0)
+# cv2.imshow('image',orig)
+# cv2.waitKey(0)
+output.show()
+
+
