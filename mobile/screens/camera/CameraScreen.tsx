@@ -50,7 +50,7 @@ const CameraScreen = props => {
                   </TouchableOpacity>
                   <TouchableOpacity
                       onPress={async() => {
-                        const picture = await cameraRef.current.takePictureAsync();
+                        const picture = await cameraRef.current.takePictureAsync({quality: 0, base64: true});
                         props.navigation.navigate('Display',{picture});
                       }}
                   >

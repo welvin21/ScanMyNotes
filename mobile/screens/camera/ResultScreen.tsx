@@ -1,32 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
-import env from '../../env';
+import * as FileSystem from 'expo-file-system';
 import Loader from '../../components/Loader';
+import env from '../../env';
 
 const axios = require('axios');
+const firebase = require('firebase/app');
+require('firebase/storage');
+
+const fbConfig = env.fbConfig;
+firebase.initializeApp(fbConfig);
+const storageRef = firebase.storage().ref();
+const imageRef = storageRef.child('image.jpeg');
 
 const Result = props => {
-  const url = props.navigation.getParam('uri',null);
+  const picture = props.navigation.getParam('picture',null);
   const [ result, changeResult ] = useState(null);
+  const { uri } = picture;
 
   useEffect(() => {
     const getResult = async() => {
-      let formData = new FormData();
-      formData.append('apikey',env.apikey);
-      formData.append('url',url);
-      
-      axios.post('https://api.ocr.space/parse/image',formData,{
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }).then( res => {
-        const { ParsedResults } = res.data;
-        changeResult('output');
-      } )
-      .catch( err => console.error(err) );
-    };
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-    setInterval( () => {
+      (async() => {
+        imageRef.put(blob)
+        .then( snapshot => {
+          return snapshot.ref.getDownloadURL();
+        })
+        .then( async url => {
+            await axios.post(`http://${env.myIPv4}:3000/convert`,{url})
+            .then(res => changeResult(res.data))
+            .catch(err => {
+              console.error(err);
+              changeResult('Failed getting result');
+            });
+        })
+        .catch( err => console.error(err) );
+      })();
+    }
+
+    setTimeout( () => {
       getResult();
     }, 3500);
 
