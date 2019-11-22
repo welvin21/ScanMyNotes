@@ -127,7 +127,8 @@ for box in rects:
     draw.text((startX,startY), txt, (0, 0, 0), font=font)
 
 # output image
-cv2.imshow('image',orig)
-
+# cv2.imshow('image',orig)
+# cv2.waitKey(0)
+output.show()
 
 
