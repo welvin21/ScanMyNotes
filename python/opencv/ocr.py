@@ -4,7 +4,7 @@ import cv2
 class OCR:
   def preProcess(img):
     # image interpolation using bicubic method
-    img = cv2.resize(img,None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    img = cv2.resize(img,None, fx=1, fy=1, interpolation=cv2.INTER_CUBIC)
 
     # convert image to graycale format
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -21,8 +21,9 @@ class OCR:
     #add white border
     img = cv2.copyMakeBorder(img,10,10,10,10,cv2.BORDER_CONSTANT,value=(255,255,255))
     return img
-  def getText(img,lang):
-    txt = pytesseract.image_to_string(img,lang=lang)
+  def getText(img):
+    config = ('-l eng --oem 1 --psm 8')
+    txt = pytesseract.image_to_string(img,config=config)
     # if(txt == ''):
     #   cv2.imshow('image',img)
     #   cv2.waitKey(0)

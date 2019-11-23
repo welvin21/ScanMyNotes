@@ -13,10 +13,8 @@ argParser.add_argument('-east', '--east', type=str,
                        help='path tp east detector (.pb file)')
 argParser.add_argument('-c', '--min-confidence', type=float,
                        default=0.5, help='min probability to inspect a region')
-argParser.add_argument('-w', '--width', type=int, default=1600,
-                       help='resized image width (multiple of 32)')
-argParser.add_argument('-e', '--height', type=int, default=3200,
-                       help='resized image height (multiple of 32)')
+argParser.add_argument('-thold', '--treeshold', type=int,
+                       default=1600, help='max size of either one of the dimensions of image (multiple of 320)')
 
 args = vars(argParser.parse_args())
 
@@ -24,16 +22,28 @@ args = vars(argParser.parse_args())
 image = cv2.imread(args['image'])
 orig = image.copy()
 h, w = image.shape[:2]
-rH = h/float(args['height'])
-rW = w/float(args['width'])
+
+# image rescaling
+aspectRatio = (w/h)
+treeshold = args['treeshold']
+if(treeshold > 1600):
+    print('[ERROR] Treeshold too high!')
+    exit()
+if(w > h):
+    newW = treeshold
+    newH = int(1/aspectRatio * treeshold)
+    newH = int(round(newH/320) * 320)
+else:
+    newH = treeshold
+    newW = int(aspectRatio * treeshold)
+    newW = int(round(newW/320) * 320)
+rH = h/newH
+rW = w/newW
+image = cv2.resize(image, (newW, newH))
 
 # initialize blank PIL Image for output
-output = Image.new('RGB', (w,h), (255,255,255))
+output = Image.new('RGB', (w, h), (255, 255, 255))
 draw = ImageDraw.Draw(output)
-
-# change image's dimensions
-h, w = args['height'], args['width']
-image = cv2.resize(image, (w,h))
 
 # define layers' name for later purpose
 layers = [
@@ -46,7 +56,7 @@ print('[INFO] Loading EAST text detector model...')
 net = cv2.dnn.readNet(args['east'])
 
 # construct a blob from image input
-blob = cv2.dnn.blobFromImage(image, 1.0, (w, h),
+blob = cv2.dnn.blobFromImage(image, 1.0, (newW, newH),
                              (123.68, 116.78, 103.94), swapRB=True, crop=False)
 
 # forward image to model and get output stored
@@ -92,8 +102,9 @@ for i in range(numOfRows):
 # boxes
 rects = non_max_suppression(np.array(rects), probs=confidences)
 
-# draw each bounding boxes
+# get text result for each ORI
 
+boxes = []
 for box in rects:
     startX = int(box[0] * rW)
     startY = int(box[1] * rH)
@@ -102,33 +113,63 @@ for box in rects:
 
     boxHeight = abs(endY - startY)
     boxWidth = abs(endX - startX)
-    toleranceX = int(10/100 * boxWidth)
-    toleranceY = int(10/100 * boxHeight)
+    toleranceX = int(5/100 * boxWidth)
+    toleranceY = int(5/100 * boxHeight)
 
-    startX-=toleranceX
-    startY-=toleranceY
-    endX+=toleranceX
-    endY+=toleranceY
+    startX -= toleranceX
+    startY -= toleranceY
+    endX += toleranceX
+    endY += toleranceY
 
     # draw the bounding box on the image
     # cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 
     # get portion of image containing text
     crop = orig[startY:endY, startX:endX]
-    
+
     # image pre-processing
     crop = OCR.preProcess(crop)
 
     # get text from ocr
-    txt = (OCR.getText(crop,'eng'))
-    print(txt)
+    txt = (OCR.getText(crop))
+    boxes.append(((startX,startY,endX,endY), txt))
 
-    font = ImageFont.truetype('./fonts/arial.ttf', max(int(boxHeight * 0.6), 14))
-    draw.text((startX,startY), txt, (0, 0, 0), font=font)
+# simple block alignment algorithm
+# by finding ignorable difference between starting pixels
+# of each ROI
+def alignText(boxes, pixel, drawer):
+    newBoxes = dict()
+    for coord,txt in boxes:
+        isPresent = False
+        startY = coord[1]
+        for i in range(startY-pixel,startY+pixel+1):
+            if(i in newBoxes):
+                newBoxes[i].update({coord[0] : (coord,txt)})
+                isPresent = True
+                break
+        if(not isPresent):
+            newBoxes[startY] = {coord[0] : (coord,txt)}
+
+    # draw aligned ROIs to blank PIL Image
+    for startY in newBoxes : 
+        elem = newBoxes[startY]
+
+        # calculate average height for font size
+        listOfHeight = [ (abs(elem[key][0][3] - elem[key][0][1])) for key in elem ]
+        boxHeight = sum(listOfHeight)/len(listOfHeight)
+        font = ImageFont.truetype('./fonts/arial.ttf', int(boxHeight * 0.9))
+
+        #draw each ROI on output PIL
+        for key in elem : 
+            startX = elem[key][0][0]
+            txt = elem[key][1]  
+            drawer.text((startX,startY), txt, (0, 0, 0), font=font)
+
+# apply text alignment function
+pixel = 5
+alignText(boxes, pixel, draw)
 
 # output image
-# cv2.imshow('image',orig)
+# cv2.imshow('image', orig)
 # cv2.waitKey(0)
 output.show()
-
-
